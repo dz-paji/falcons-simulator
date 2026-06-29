@@ -308,9 +308,11 @@ async function rollDraft() {
     regionSlot.querySelector('.slot-value').textContent = region;
     eraSlot.querySelector('.slot-value').textContent = era;
     
-    // 抽取 3 名选手
+    // 抽取 6 名选手（排除已选中的同名选手）
     const pool = PLAYER_POOL[region][era];
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const pickedNames = new Set(Object.values(state.team).map(p => p.name));
+    const available = pool.filter(p => !pickedNames.has(p.name));
+    const shuffled = [...available].sort(() => Math.random() - 0.5);
     const options = shuffled.slice(0, 6);
     state.currentOptions = options.map(p => Object.assign({}, p, { region: region, era: era }));
     state.selectedPlayer = null;
