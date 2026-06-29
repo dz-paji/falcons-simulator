@@ -4,7 +4,7 @@
 
 ## 在线游玩
 
-👉 https://YOUR_USERNAME.github.io/csgo-major-draft
+👉 https://dz-paji.github.io/falcons-simulator/
 
 ## 玩法
 
