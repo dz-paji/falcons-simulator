@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS:GO Major Draft - 组建你的梦之队</title>
+<style>
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { font-family: 'Segoe UI','Noto Sans SC','Microsoft YaHei',sans-serif; background: #0a0a0f; color: #e0e0e0; min-height: 100vh; overflow-x: hidden; }
+.bg-particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.3; }
+.particle { position: absolute; width: 3px; height: 3px; background: #f4a900; border-radius: 50%; animation: float 8s infinite ease-in-out; }
+@keyframes float { 0%,100% { transform: translateY(0) scale(1); opacity: 0.3; } 50% { transform: translateY(-40px) scale(1.5); opacity: 0.8; } }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+header { text-align: center; padding: 40px 0 20px; border-bottom: 2px solid #1a1a2e; margin-bottom: 30px; }
+header h1 { font-size: 3.5rem; font-weight: 900; background: linear-gradient(135deg, #f4a900, #ff6b00, #f4a900); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-transform: uppercase; letter-spacing: 4px; animation: glow 2s ease-in-out infinite alternate; }
+@keyframes glow { from { text-shadow: 0 0 40px rgba(244,169,0,0.3); } to { text-shadow: 0 0 60px rgba(255,107,0,0.5); } }
+header .subtitle { font-size: 1.1rem; color: #888; margin-top: 10px; letter-spacing: 2px; }
+
+.round-indicator { text-align: center; margin: 20px 0; font-size: 1.2rem; color: #888; }
+.round-indicator span { color: #f4a900; font-weight: 800; font-size: 1.5rem; }
+
+.slot-machine { display: flex; justify-content: center; gap: 20px; margin: 20px 0; flex-wrap: wrap; }
+.slot { background: linear-gradient(145deg, #1a1a2e, #0d0d1a); border: 2px solid #333; border-radius: 16px; width: 220px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: all 0.3s; }
+.slot.active { border-color: #f4a900; box-shadow: 0 0 20px rgba(244,169,0,0.2); }
+.slot-label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 2px; position: absolute; top: 12px; }
+.slot-value { font-size: 1.6rem; font-weight: 800; color: #fff; transition: all 0.1s; text-align: center; padding: 0 10px; }
+.slot-rolling { animation: slotShake 0.1s infinite; }
+@keyframes slotShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+
+.btn-group { display: flex; justify-content: center; gap: 15px; margin: 30px 0; flex-wrap: wrap; }
+.btn { padding: 14px 40px; font-size: 1rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; position: relative; overflow: hidden; }
+.btn-primary { background: linear-gradient(135deg, #f4a900, #ff6b00); color: #0a0a0f; box-shadow: 0 4px 20px rgba(244,169,0,0.3); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(244,169,0,0.5); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-secondary { background: transparent; color: #f4a900; border: 2px solid #f4a900; padding: 12px 30px; }
+.btn-secondary:hover { background: rgba(244,169,0,0.1); }
+.btn-secondary:disabled { opacity: 0.3; border-color: #555; color: #555; cursor: not-allowed; }
+.btn-skip { background: transparent; color: #888; border: 1px solid #555; padding: 10px 24px; font-size: 0.85rem; border-radius: 6px; cursor: pointer; transition: all 0.3s; }
+.btn-skip:hover { border-color: #f4a900; color: #f4a900; }
+.btn-skip:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.draft-area { display: none; margin: 30px 0; }
+.draft-area.visible { display: block; animation: fadeIn 0.5s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.draft-title { text-align: center; font-size: 1.3rem; color: #f4a900; margin-bottom: 20px; }
+.draft-subtitle { text-align: center; font-size: 0.9rem; color: #888; margin-bottom: 25px; }
+.draft-cards { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+
+.player-card-draft { background: linear-gradient(145deg, #1a1a2e, #0d0d1a); border: 1px solid #2a2a3e; border-radius: 16px; padding: 16px 12px; width: 175px; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; text-align: center; }
+.player-card-draft:hover { border-color: #f4a900; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+.player-card-draft.selected { border-color: #f4a900; box-shadow: 0 0 20px rgba(244,169,0,0.3); background: linear-gradient(145deg, #1a1a2e, #1a1500); }
+.player-card-draft.dimmed { opacity: 0.4; pointer-events: none; }
+.card-pos-tag { font-size: 0.7rem; color: #f4a900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.card-name { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.card-rating { display: inline-block; background: rgba(244,169,0,0.15); color: #f4a900; padding: 4px 16px; border-radius: 20px; font-weight: 700; font-size: 1.1rem; margin-bottom: 10px; }
+.card-desc { font-size: 0.85rem; color: #aaa; line-height: 1.5; margin-bottom: 10px; }
+.card-rating-bar { width: 100%; height: 6px; background: #1a1a2e; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+.card-rating-bar-inner { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #f4a900, #ff6b00); width: 0%; transition: width 1s ease-out; }
+.card-era { font-size: 0.75rem; color: #888; margin-bottom: 8px; }
+.card-hint { font-size: 0.7rem; color: #666; margin-top: 10px; font-style: italic; }
+
+.position-selector { display: none; justify-content: center; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
+.position-selector.visible { display: flex; animation: fadeIn 0.3s; }
+.pos-btn { background: rgba(255,255,255,0.03); border: 1px solid #2a2a3e; color: #ccc; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 700; transition: all 0.3s; text-align: center; min-width: 100px; }
+.pos-btn:hover:not(.occupied) { border-color: #f4a900; color: #f4a900; background: rgba(244,169,0,0.05); }
+.pos-btn.occupied { opacity: 0.3; cursor: not-allowed; border-color: #1a1a2e; color: #555; }
+.pos-btn.selected-slot { border-color: #f4a900; background: rgba(244,169,0,0.1); color: #f4a900; }
+.pos-btn .pos-label { font-size: 0.7rem; color: #888; display: block; margin-top: 4px; font-weight: 400; }
+
+.roster-area { margin: 40px 0; }
+.roster-title { text-align: center; font-size: 1.5rem; color: #f4a900; margin-bottom: 25px; }
+.roster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+.roster-slot { background: linear-gradient(145deg, #1a1a2e, #0d0d1a); border: 1px solid #2a2a3e; border-radius: 16px; padding: 20px; text-align: center; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s; }
+.roster-slot.filled { border-color: #f4a900; background: linear-gradient(145deg, #1a1a2e, #1a1500); }
+.roster-slot-empty { color: #444; font-size: 0.9rem; }
+.roster-slot-pos { font-size: 0.7rem; color: #f4a900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+.roster-slot-name { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.roster-slot-rating { display: inline-block; background: rgba(244,169,0,0.15); color: #f4a900; padding: 4px 14px; border-radius: 20px; font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+.roster-slot-desc { font-size: 0.8rem; color: #aaa; line-height: 1.4; }
+.roster-slot-era { font-size: 0.75rem; color: #888; margin-top: 8px; }
+
+.simulation-result { background: linear-gradient(145deg, #1a1a2e, #0d0d1a); border: 1px solid #2a2a3e; border-radius: 20px; padding: 30px; margin: 30px 0; text-align: center; display: none; }
+.simulation-result.visible { display: block; animation: fadeIn 0.5s; }
+.result-title { font-size: 2rem; font-weight: 800; margin-bottom: 15px; }
+.result-title.champion { color: #f4a900; }
+.result-title.contender { color: #ff6b00; }
+.result-title.challenger { color: #ff8c00; }
+.result-title.middle { color: #aaa; }
+.result-title.struggle { color: #ff4444; }
+.result-desc { font-size: 1.1rem; color: #bbb; margin-bottom: 20px; line-height: 1.8; }
+.major-bracket { display: flex; justify-content: center; gap: 15px; margin: 20px 0; flex-wrap: wrap; }
+.bracket-stage { padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; background: #1a1a2e; border: 1px solid #333; color: #888; }
+.bracket-stage.passed { background: rgba(244,169,0,0.15); border-color: #f4a900; color: #f4a900; }
+.bracket-stage.failed { background: rgba(255,68,68,0.1); border-color: #ff4444; color: #ff4444; }
+.team-analysis { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0; }
+.analysis-card { background: rgba(255,255,255,0.03); border: 1px solid #2a2a3e; border-radius: 12px; padding: 15px; text-align: left; }
+.analysis-card h4 { font-size: 0.8rem; color: #888; margin-bottom: 8px; text-transform: uppercase; }
+.analysis-card p { font-size: 0.9rem; color: #ccc; }
+.analysis-bar { width: 100%; height: 8px; background: #1a1a2e; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+.analysis-bar-fill { height: 100%; border-radius: 4px; transition: width 1s; }
+.analysis-mismatch { font-size: 0.75rem; color: #ff4444; margin-top: 5px; }
+
+.rules-panel { background: rgba(255,255,255,0.02); border: 1px solid #1a1a2e; border-radius: 16px; padding: 30px; margin: 40px 0; }
+.rules-panel h2 { font-size: 1.5rem; color: #f4a900; margin-bottom: 20px; }
+.rules-panel h3 { font-size: 1.1rem; color: #ccc; margin: 20px 0 10px; }
+.rules-panel p { font-size: 0.9rem; color: #aaa; line-height: 1.8; margin-bottom: 10px; }
+.rules-panel ul { margin-left: 20px; color: #aaa; font-size: 0.9rem; line-height: 1.8; }
+.history-panel { margin-top: 40px; border-top: 1px solid #1a1a2e; padding-top: 30px; }
+.history-panel h2 { font-size: 1.3rem; color: #f4a900; margin-bottom: 20px; }
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+.history-item { background: rgba(255,255,255,0.03); border: 1px solid #1a1a2e; border-radius: 10px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; flex-wrap: wrap; gap: 8px; }
+.history-item .h-result { font-weight: 700; }
+.history-item .h-result.champion { color: #f4a900; }
+.history-item .h-result.contender { color: #ff6b00; }
+.history-item .h-result.challenger { color: #ff8c00; }
+.history-item .h-result.out { color: #ff4444; }
+
+@media (max-width: 768px) { header h1 { font-size: 2rem; } .slot { width: 160px; height: 100px; } .slot-value { font-size: 1.2rem; } .player-card-draft { width: 100%; max-width: 320px; } }
+
+</style>
+</head>
+<body>
+<div class="bg-particles" id="bgParticles"></div>
+<div class="container">
+
+<header>
+<h1>CS:GO MAJOR</h1>
+<div class="subtitle">DRAFT SIMULATOR · 组建你的梦之队</div>
+</header>
+
+<div class="round-indicator">当前轮次：<span id="roundNum">1</span> / 5</div>
+
+<div class="slot-machine">
+<div class="slot" id="regionSlot"><div class="slot-label">地区</div><div class="slot-value">？？</div></div>
+<div class="slot" id="eraSlot"><div class="slot-label">时代</div><div class="slot-value">？？</div></div>
+</div>
+
+<div class="btn-group">
+<button class="btn btn-primary" id="rollBtn" onclick="rollDraft()">🎰 开始抽卡</button>
+<button class="btn btn-skip" id="skipBtn" onclick="skipDraft()" disabled>⏭ 跳过</button>
+<button class="btn btn-secondary" id="simBtn" onclick="simulateMajor()" disabled>🔮 模拟 Major</button>
+</div>
+
+<div class="draft-area" id="draftArea">
+<div class="draft-title">🎯 选择一名选手加入你的阵容</div>
+<div class="draft-subtitle" id="draftSubtitle">从以下 3 名选手中选择一名，然后为其分配位置</div>
+<div class="draft-cards" id="draftCards"></div>
+<div class="position-selector" id="positionSelector">
+
+<button class="pos-btn" id="posBtn_指挥" onclick="selectPosition(&quot;指挥&quot;)"><span>指挥</span><span class="pos-label">IGL</span></button>
+
+<button class="pos-btn" id="posBtn_狙击手" onclick="selectPosition(&quot;狙击手&quot;)"><span>狙击手</span><span class="pos-label">AWP</span></button>
+
+<button class="pos-btn" id="posBtn_明星选手" onclick="selectPosition(&quot;明星选手&quot;)"><span>明星选手</span><span class="pos-label">Star</span></button>
+
+<button class="pos-btn" id="posBtn_突破手" onclick="selectPosition(&quot;突破手&quot;)"><span>突破手</span><span class="pos-label">Entry</span></button>
+
+<button class="pos-btn" id="posBtn_绕后手" onclick="selectPosition(&quot;绕后手&quot;)"><span>绕后手</span><span class="pos-label">Lurker</span></button>
+
+</div>
+</div>
+
+<div class="roster-area">
+<div class="roster-title">🛡️ 你的阵容</div>
+<div class="roster-grid" id="roster">
+
+<div class="roster-slot" id="roster_指挥">
+
+<div class="roster-slot-empty">指挥 · IGL<br>等待选人...</div>
+
+</div>
+
+<div class="roster-slot" id="roster_狙击手">
+
+<div class="roster-slot-empty">狙击手 · AWP<br>等待选人...</div>
+
+</div>
+
+<div class="roster-slot" id="roster_明星选手">
+
+<div class="roster-slot-empty">明星选手 · Star<br>等待选人...</div>
+
+</div>
+
+<div class="roster-slot" id="roster_突破手">
+
+<div class="roster-slot-empty">突破手 · Entry<br>等待选人...</div>
+
+</div>
+
+<div class="roster-slot" id="roster_绕后手">
+
+<div class="roster-slot-empty">绕后手 · Lurker<br>等待选人...</div>
+
+</div>
+
+</div>
+</div>
+
+<div class="simulation-result" id="simResult">
+<div class="result-title" id="resultTitle">结果</div>
+<div class="result-desc" id="resultDesc">描述</div>
+<div class="major-bracket" id="majorBracket"></div>
+<div class="team-analysis" id="teamAnalysis"></div>
+</div>
+
+<div class="rules-panel">
+<h2>🎮 游戏规则</h2>
+<h3>1. 选秀抽卡</h3>
+<p>点击「开始抽卡」，老虎机会随机为你选择一个地区和时代。系统会从该组合的选手池中抽取 3 名选手作为备选。</p>
+<h3>2. 选择选手</h3>
+<p>查看 3 名备选选手的评分、描述和擅长位置。点击你心仪的选手卡片。</p>
+<h3>3. 分配位置</h3>
+<p>选中选手后，点击下方的位置按钮将其放置到阵容中。每个位置只能放一人，已占用的位置会变灰。</p>
+<h3>4. 位置匹配</h3>
+<p>如果选手被放到他的<strong>擅长位置</strong>，获得 100% 评分；如果放到<strong>其他位置</strong>，评分会下降 15%（但偶尔错位也能产生奇效）。</p>
+<h3>5. 重复 5 轮</h3>
+<p>每轮抽卡都是独立的，地区+时代会重新随机。5 轮后填满阵容，即可模拟 Major。</p>
+<h3>6. 跳过机制</h3>
+<p>每局你有一次跳过机会。如果 3 名备选都不满意，可以点击「跳过」重新抽取一轮。</p>
+<h3>7. Major 模拟</h3>
+<p>阵容填满后，点击「模拟 Major」，系统会基于选手评分、位置匹配度和时代兼容性进行综合评估。</p>
+</div>
+
+<div class="history-panel">
+<h2>📜 模拟历史</h2>
+<div class="history-list" id="historyList"></div>
+</div>
+</div>
+
+<script>
+
+const REGIONS = ["欧洲", "北美", "CIS", "南美", "亚洲", "大洋洲"];
+
+const ERAS = ["2000s", "2010-2015", "2016-2019", "2020-2022", "2023-2025"];
+
+const POSITIONS = ["指挥", "狙击手", "明星选手", "突破手", "绕后手"];
+
+const POSITIONS_EN = {"指挥": "IGL", "狙击手": "AWP", "明星选手": "Star", "突破手": "Entry", "绕后手": "Lurker"};
+
+const PLAYER_POOL = {"欧洲": {"2000s": [{"name": "Zeus", "rating": 78, "desc": "早期战术先驱，NaVi 奠基人", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "pronax", "rating": 82, "desc": "fnatic 王朝奠基者，战术大师", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "TaZ", "rating": 76, "desc": "Golden Five 核心，波兰传奇", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "f0rest", "rating": 88, "desc": "瑞典传奇，全能狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "markeloff", "rating": 90, "desc": "乌克兰狙神，1.6时代最强AWP", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "GuardiaN", "rating": 84, "desc": "早期崭露头角的斯洛伐克狙神", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "NEO", "rating": 92, "desc": "CS 1.6 历史第一人", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "f0rest", "rating": 90, "desc": "瑞典传奇，十项全能", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "GeT_RiGhT", "rating": 91, "desc": "史上最佳步枪手之一", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "trace", "rating": 85, "desc": "mTw 突破核心，丹麦尖刀", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Edward", "rating": 83, "desc": "乌克兰步枪手，NaVi 火力点", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "ceh9", "rating": 80, "desc": "NaVi 辅助步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "GeT_RiGhT", "rating": 93, "desc": "开创了现代绕后打法的男人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "f0rest", "rating": 88, "desc": "冷静的残局大师", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "NEO", "rating": 89, "desc": "1.6 时代最聪明的选手", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2010-2015": [{"name": "pronax", "rating": 86, "desc": "fnatic 王朝三冠指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Happy", "rating": 84, "desc": "EnVyUs 冠军指挥，A点防守大师", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "karrigan", "rating": 82, "desc": "TSM/Astralis 早期指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "JW", "rating": 89, "desc": "fnatic 进攻狙，激进风格开创者", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "GuardiaN", "rating": 91, "desc": "NaVi 巅峰狙神，精准无比", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "kennyS", "rating": 92, "desc": "泰坦神狙，反应速度天花板", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "olofmeister", "rating": 93, "desc": "fnatic 巅峰，2015年世界第一", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "GeT_RiGhT", "rating": 90, "desc": "NiP 传奇，CS:GO早期统治者", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "f0rest", "rating": 88, "desc": "瑞典常青树，NiP 核心", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "flusha", "rating": 89, "desc": "fnatic 隐藏MVP，关键先生", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "KRiMZ", "rating": 88, "desc": "fnatic 稳定支柱，完美辅助", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "shox", "rating": 87, "desc": "法国天才，全能战士", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Xyp9x", "rating": 88, "desc": "Astralis 早期，残局大师", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "NBK", "rating": 85, "desc": "法国智慧型选手，副指挥", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "SmithZz", "rating": 81, "desc": "VeryGames 老将，经验型绕后", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2016-2019": [{"name": "gla1ve", "rating": 90, "desc": "Astralis 王朝缔造者，战术革命", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "karrigan", "rating": 86, "desc": "FaZe 银河战舰指挥官", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "FalleN", "rating": 87, "desc": "SK 王朝双冠指挥（欧洲效力）", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "device", "rating": 93, "desc": "Astralis 稳定之神，A队王朝核心", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "s1mple", "rating": 95, "desc": "NaVi 终极武器，个人能力的极限", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "GuardiaN", "rating": 88, "desc": "FaZe 老将，经验丰富", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "s1mple", "rating": 96, "desc": "公认历史最强个人实力", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "NiKo", "rating": 92, "desc": "波黑天才步枪手，瞄准标杆", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "device", "rating": 93, "desc": "最稳定的超级明星", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "rain", "rating": 89, "desc": "FaZe 挪威突破手，稳定输出", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "dupreeh", "rating": 88, "desc": "Astralis 丹麦突破核心", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "electronic", "rating": 90, "desc": "NaVi 第二火力点，顶级步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Xyp9x", "rating": 91, "desc": "Astralis 残局之神，33%胜率传说", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Magisk", "rating": 87, "desc": "Astralis 全能辅助", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "KRiMZ", "rating": 85, "desc": "fnatic 后期老将", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2020-2022": [{"name": "gla1ve", "rating": 88, "desc": "Astralis 后期，回归传奇", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "karrigan", "rating": 89, "desc": "FaZe 2022 Major 冠军指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "apEX", "rating": 86, "desc": "Vitality 激情指挥，法国队长", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "s1mple", "rating": 97, "desc": "2021年巅峰，历史最佳单赛季", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "ZywOo", "rating": 95, "desc": "法国怪物，2020年世界第一", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "device", "rating": 90, "desc": "NiP 短暂效力，依旧顶级", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "s1mple", "rating": 98, "desc": "2021斯德哥尔摩Major MVP，神级表现", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "ZywOo", "rating": 94, "desc": "Vitality 核心，天才少年", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "NiKo", "rating": 91, "desc": "G2 核心，步枪手天花板", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "ropz", "rating": 91, "desc": "FaZe 爱沙尼亚天才，顶级自由人", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "broky", "rating": 88, "desc": "FaZe 拉脱维亚新星，全能选手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Spinx", "rating": 87, "desc": "ENCE 以色列步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "ropz", "rating": 92, "desc": "FaZe 完美自由人，意识和枪法并存", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "blameF", "rating": 88, "desc": "Astralis 数据型自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "KRiMZ", "rating": 84, "desc": "fnatic 老将，经验丰富", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2023-2025": [{"name": "Aleksib", "rating": 90, "desc": "NAVI 2024 Major 冠军指挥，芬兰战术家", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "apEX", "rating": 87, "desc": "Vitality 老将，2023巴黎Major冠军", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Snax", "rating": 85, "desc": "G2 传奇回归，波兰老将重生", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "m0NESY", "rating": 95, "desc": "G2 俄罗斯天才少年，新一代狙神", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "ZywOo", "rating": 94, "desc": "Vitality 常青树，稳定顶级", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "sh1ro", "rating": 91, "desc": "Spirit 精准狙击手，救场王", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "donk", "rating": 97, "desc": "Spirit 超级新星，2024上海Major MVP，改变游戏的男人", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "m0NESY", "rating": 94, "desc": "G2 全能 superstar，狙击+步枪", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "ZywOo", "rating": 93, "desc": "Vitality 法国门面", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "jL", "rating": 89, "desc": "NAVI 立陶宛猛男，2024 Major冠军成员", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "iM", "rating": 88, "desc": "NAVI 罗马尼亚步枪手，残局高手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "flameZ", "rating": 87, "desc": "Vitality 以色列突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "ropz", "rating": 91, "desc": "Vitality 自由人，2024 Major冠军", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "b1t", "rating": 89, "desc": "NAVI 乌克兰天才，2021+2024双冠", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Magixx", "rating": 88, "desc": "Spirit 俄罗斯辅助，团队型选手", "primary_position": "绕后手", "primary_position_en": "Lurker"}]}, "北美": {"2000s": [{"name": "Warden", "rating": 75, "desc": "3D 早期战术核心", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Rambo", "rating": 73, "desc": "北美老将，经验指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "fRod", "rating": 85, "desc": "CoL 传奇狙击手，北美AWP教父", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Storm", "rating": 78, "desc": "3D 主力狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "fRod", "rating": 84, "desc": "CoL 核心，北美CS先驱", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "n0thing", "rating": 82, "desc": "CoL 少年天才，枪法出众", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "zet", "rating": 79, "desc": "CoL 瑞典裔步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "n0thing", "rating": 83, "desc": "CoL 早期突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Storm", "rating": 77, "desc": "3D 主力步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Warden", "rating": 76, "desc": "3D 残局选手", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Rambo", "rating": 74, "desc": "北美老将，经验型选手", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2010-2015": [{"name": "seang@res", "rating": 84, "desc": "CoL 北美战术大脑", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Hiko", "rating": 83, "desc": "clutch 大师，半指挥角色", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Skadoodle", "rating": 89, "desc": "CoL/C9 北美狙神，精准AWP", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "jdm64", "rating": 84, "desc": "CLG 狙击手，激进风格", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Hiko", "rating": 88, "desc": "北美传奇，clutch 之王", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "n0thing", "rating": 86, "desc": "C9 核心，全能选手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "shroud", "rating": 85, "desc": "C9 天赋型选手，反应极快", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "EliGE", "rating": 88, "desc": "Liquid 年轻突破手，迅猛上升", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Freakazoid", "rating": 81, "desc": "C9 肌肉型突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Stewie2k", "rating": 85, "desc": "C9 新世代突破手，无畏风格", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "n0thing", "rating": 85, "desc": "C9 自由人，经验丰富", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "shroud", "rating": 84, "desc": "C9 枪法流自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2016-2019": [{"name": "nitr0", "rating": 86, "desc": "Liquid 北美第一指挥，团队大脑", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "tarik", "rating": 84, "desc": "C9 2018 Major 冠军指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Stewie2k", "rating": 83, "desc": "MiBR/SK 转型指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Skadoodle", "rating": 88, "desc": "C9 2018 Major 冠军狙神", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "nitr0", "rating": 85, "desc": "Liquid 指挥兼职狙击", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "jdm64", "rating": 82, "desc": "Liquid 早期狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Twistzz", "rating": 90, "desc": "Liquid 加拿大爆头机器", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "EliGE", "rating": 91, "desc": "Liquid 北美最强步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "NAF", "rating": 89, "desc": "Liquid 加拿大全能选手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "EliGE", "rating": 91, "desc": "Liquid 突破核心，北美第一步枪", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Stewie2k", "rating": 86, "desc": "C9/MiBR 无畏突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "autimatic", "rating": 85, "desc": "C9 2018 Major 冠军成员", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "NAF", "rating": 90, "desc": "Liquid 完美自由人，冷静高效", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "RUSH", "rating": 82, "desc": "C9 辅助型自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "tarik", "rating": 83, "desc": "C9 全能选手，2018 Major冠军", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2020-2022": [{"name": "nitr0", "rating": 85, "desc": "Liquid 末期/100T 指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "stanislaw", "rating": 83, "desc": "EG 北美战术指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "daps", "rating": 80, "desc": "北美老将指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "oSee", "rating": 86, "desc": "Extra Salt/Liquid 新世代狙神", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Junior", "rating": 82, "desc": "FURIA 北美狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Brehze", "rating": 83, "desc": "EG 步枪手兼职狙击", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "EliGE", "rating": 90, "desc": "Liquid 坚守核心", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Twistzz", "rating": 89, "desc": "FaZe 加拿大步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "NAF", "rating": 88, "desc": "Liquid 加拿大支柱", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "EliGE", "rating": 89, "desc": "Liquid 北美突破尖刀", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "YEKINDAR", "rating": 91, "desc": "VP/ Liquid 拉脱维亚狂战士（北美效力）", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Brehze", "rating": 85, "desc": "EG 突破核心", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "NAF", "rating": 89, "desc": "Liquid 自由人，残局大师", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "CeRq", "rating": 83, "desc": "EG 保加利亚狙击手（北美效力）", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2023-2025": [{"name": "nitr0", "rating": 84, "desc": "Liquid 回归指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Stewie2k", "rating": 82, "desc": "G2/Liquid 老将回归", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "advent", "rating": 78, "desc": "北美亚洲裔指挥（跨区）", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "oSee", "rating": 85, "desc": "Liquid 主力狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Junior", "rating": 81, "desc": "Complexity 北美狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "skullz", "rating": 82, "desc": "Liquid/新队 巴西裔北美选手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "EliGE", "rating": 88, "desc": "FaZe 2024 Major 冠军北美选手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Twistzz", "rating": 88, "desc": "FaZe 加拿大冠军成员", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "NAF", "rating": 87, "desc": "Liquid 坚守明星", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "EliGE", "rating": 88, "desc": "FaZe 2024 冠军突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "floppy", "rating": 83, "desc": "Complexity 北美突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "skullz", "rating": 81, "desc": "新队北美突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "jks", "rating": 88, "desc": "G2 2023 Major 冠军，澳洲-北美自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "NAF", "rating": 87, "desc": "Liquid 自由人核心", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Twistzz", "rating": 86, "desc": "FaZe 全能型选手", "primary_position": "绕后手", "primary_position_en": "Lurker"}]}, "CIS": {"2000s": [{"name": "Zeus", "rating": 82, "desc": "NaVi 早期战术指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "starix", "rating": 80, "desc": "NaVi 全能选手，副指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "markeloff", "rating": 91, "desc": "NaVi 1.6传奇狙神", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "GuardiaN", "rating": 83, "desc": "早期斯洛伐克-CS选手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "markeloff", "rating": 90, "desc": "NaVi 1.6时代核心", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Edward", "rating": 85, "desc": "NaVi 乌克兰步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "f0rest", "rating": 80, "desc": "跨区参赛", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Edward", "rating": 86, "desc": "NaVi 突破核心", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "ceh9", "rating": 82, "desc": "NaVi 辅助突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "starix", "rating": 83, "desc": "NaVi 自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Dosia", "rating": 80, "desc": "早期CIS智者", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2010-2015": [{"name": "Zeus", "rating": 85, "desc": "NaVi 回归指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "starix", "rating": 82, "desc": "NaVi 后期指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "GuardiaN", "rating": 92, "desc": "NaVi 巅峰狙神，CS:GO最强AWP之一", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "mou", "rating": 82, "desc": "早期CIS狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "GuardiaN", "rating": 91, "desc": "NaVi 核心 superstar", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "seized", "rating": 85, "desc": "NaVi 全能步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "flamie", "rating": 86, "desc": "NaVi 年轻步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "flamie", "rating": 87, "desc": "NaVi 突破新星", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "seized", "rating": 85, "desc": "NaVi 突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "HObbit", "rating": 84, "desc": "Gambit 早期哈萨克斯坦步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Dosia", "rating": 83, "desc": "Gambit 智慧型选手，X god", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "AdreN", "rating": 82, "desc": "Gambit 哈萨克斯坦全能选手", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2016-2019": [{"name": "Zeus", "rating": 87, "desc": "Gambit 2017 Major 冠军指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "seized", "rating": 82, "desc": "NaVi 短暂指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Boombl4", "rating": 80, "desc": "早期崭露头角", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "s1mple", "rating": 96, "desc": "NaVi 终极武器，历史最佳之一", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "GuardiaN", "rating": 88, "desc": "FaZe 短暂效力", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Jame", "rating": 85, "desc": "AVANGAR 早期，独特狙击风格", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "s1mple", "rating": 97, "desc": "NaVi 无可争议的超级明星", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "electronic", "rating": 91, "desc": "NaVi 俄罗斯顶级步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "flamie", "rating": 85, "desc": "NaVi 稳定输出", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "electronic", "rating": 90, "desc": "NaVi 突破尖刀", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "flamie", "rating": 86, "desc": "NaVi 突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "HObbit", "rating": 85, "desc": "Gambit 突破步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "AdreN", "rating": 84, "desc": "Gambit 2017 Major 冠军自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Dosia", "rating": 82, "desc": "Gambit 老将自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Jame", "rating": 86, "desc": "AVANGAR 独特自由人/狙击", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2020-2022": [{"name": "Boombl4", "rating": 86, "desc": "NaVi 2021 Major 冠军指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Jame", "rating": 88, "desc": "VP 2021 Major 亚军指挥，冷静如冰", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "nafany", "rating": 82, "desc": "Gambit 年轻指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "s1mple", "rating": 98, "desc": "2021年完美表现，历史巅峰", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "sh1ro", "rating": 92, "desc": "Gambit 精准狙击手，Save king", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Jame", "rating": 89, "desc": "VP 俄罗斯狙神，6秒大狙", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "s1mple", "rating": 99, "desc": "2021斯德哥尔摩Major MVP，无可争议GOAT", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "electronic", "rating": 91, "desc": "NaVi 双核之一", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "b1t", "rating": 89, "desc": "NaVi 乌克兰新星，2021 Major冠军", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "electronic", "rating": 91, "desc": "NaVi 突破核心", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Ax1Le", "rating": 88, "desc": "Gambit 哈萨克斯坦新星", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "YEKINDAR", "rating": 90, "desc": "VP 拉脱维亚狂战士", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Perfecto", "rating": 88, "desc": "NaVi 完美辅助自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "sh1ro", "rating": 90, "desc": "Gambit 狙击自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Interz", "rating": 85, "desc": "Gambit 辅助型自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2023-2025": [{"name": "chopper", "rating": 87, "desc": "Spirit 2024上海Major冠军指挥，绿叶型领袖", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Jame", "rating": 86, "desc": "VP 传奇指挥，3届Major冠军组", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "nafany", "rating": 83, "desc": "Cloud9 年轻指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "sh1ro", "rating": 93, "desc": "Spirit 2024上海Major冠军狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "m0NESY", "rating": 95, "desc": "G2 俄罗斯狙神（跨区）", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "ICY", "rating": 85, "desc": "Spirit 替补狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "donk", "rating": 98, "desc": "Spirit 2024上海Major MVP，17岁新王登基", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "sh1ro", "rating": 92, "desc": "Spirit 冠军双核之一", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "zont1x", "rating": 87, "desc": "Spirit 乌克兰新星，稳定输出", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "donk", "rating": 99, "desc": "Spirit 突破怪物，场均Rating 1.35+", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Magixx", "rating": 86, "desc": "Spirit 俄罗斯突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "fame", "rating": 85, "desc": "VP 俄罗斯步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "zont1x", "rating": 88, "desc": "Spirit 乌克兰自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Magixx", "rating": 87, "desc": "Spirit 团队型自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "FL1T", "rating": 86, "desc": "VP 俄罗斯自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}]}, "南美": {"2000s": [], "2010-2015": [{"name": "FalleN", "rating": 90, "desc": "LG/SK 巴西传奇指挥，战术教父", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "TACO", "rating": 82, "desc": "LG 副指挥，辅助角色", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "FalleN", "rating": 90, "desc": "LG 巴西狙神指挥，AWP+IGL双绝", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "HEN1", "rating": 85, "desc": "Immortals 巴西狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "fnx", "rating": 82, "desc": "LG 巴西全能选手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "FalleN", "rating": 91, "desc": "LG 巴西CS GOAT级人物", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "coldzera", "rating": 90, "desc": "LG 巴西冷神，2016世界第一", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "fer", "rating": 87, "desc": "LG 巴西野兽，凶猛步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "fer", "rating": 88, "desc": "LG 巴西突破野兽", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "TACO", "rating": 83, "desc": "LG 巴西辅助突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "boltz", "rating": 84, "desc": "Immortals 巴西突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "coldzera", "rating": 91, "desc": "LG 巴西自由人，Mirage跳狙名场面", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "fnx", "rating": 83, "desc": "LG 巴西老将自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2016-2019": [{"name": "FalleN", "rating": 89, "desc": "SK 2016-2017双Major冠军指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "TACO", "rating": 81, "desc": "SK 巴西辅助", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "FalleN", "rating": 89, "desc": "SK 巴西狙神指挥", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "HEN1", "rating": 84, "desc": "Immortals 狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "LUCAS1", "rating": 82, "desc": "Immortals 步枪手兼职狙击", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "coldzera", "rating": 93, "desc": "SK 2016-2017双Major冠军，两届TOP1", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "FalleN", "rating": 90, "desc": "SK 巴西传奇核心", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "fer", "rating": 88, "desc": "SK 巴西野兽", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "fer", "rating": 89, "desc": "SK 巴西突破核心", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "TACO", "rating": 82, "desc": "SK 巴西辅助型突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "boltz", "rating": 85, "desc": "SK 后期巴西突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "coldzera", "rating": 92, "desc": "SK 巴西完美自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "fnx", "rating": 82, "desc": "SK 早期自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "KSCERATO", "rating": 85, "desc": "FURIA 巴西新星，后期崛起", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2020-2022": [{"name": "FalleN", "rating": 86, "desc": "Liquid/MiBR 巴西传奇老将", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "TACO", "rating": 80, "desc": "MiBR 老将回归", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "art", "rating": 83, "desc": "FURIA 激进巴西指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "FalleN", "rating": 86, "desc": "Liquid/MiBR 巴西狙神老将", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "HEN1", "rating": 82, "desc": "FURIA 巴西狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "kng", "rating": 80, "desc": "MiBR 巴西狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "KSCERATO", "rating": 91, "desc": "FURIA 巴西新门面，TOP4选手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "yuurih", "rating": 88, "desc": "FURIA 巴西新星步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "coldzera", "rating": 84, "desc": "Complexity 巴西老将", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "yuurih", "rating": 87, "desc": "FURIA 巴西突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "art", "rating": 85, "desc": "FURIA 激进突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "VINI", "rating": 82, "desc": "FURIA 巴西辅助突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "KSCERATO", "rating": 90, "desc": "FURIA 巴西完美自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "boltz", "rating": 83, "desc": "MiBR 巴西老将自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2023-2025": [{"name": "FalleN", "rating": 85, "desc": "FURIA 2025回归，巴西传奇指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "art", "rating": 82, "desc": "FURIA 巴西激进指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "FalleN", "rating": 85, "desc": "FURIA 巴西狙神，2025年仍在战斗", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "skullz", "rating": 81, "desc": "巴西裔新狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "KSCERATO", "rating": 90, "desc": "FURIA 巴西最强选手，国际赛场常客", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "yuurih", "rating": 87, "desc": "FURIA 巴西步枪核心", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "coldzera", "rating": 82, "desc": "FURIA 巴西老将回归", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "yuurih", "rating": 86, "desc": "FURIA 巴西突破核心", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "chelo", "rating": 83, "desc": "Imperial 巴西突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "fer", "rating": 80, "desc": "FURIA 巴西老将突破", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "KSCERATO", "rating": 89, "desc": "FURIA 巴西王牌自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "TACO", "rating": 80, "desc": "巴西老将自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "boltz", "rating": 82, "desc": "巴西老将自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}]}, "亚洲": {"2000s": [], "2010-2015": [{"name": "CaptainMo", "rating": 78, "desc": "TyLoo 中国早期指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Savage", "rating": 76, "desc": "中国CS 1.6老将", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Mo", "rating": 80, "desc": "TyLoo 中国狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "DD", "rating": 78, "desc": "TyLoo 中国步枪手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Mo", "rating": 80, "desc": "TyLoo 中国核心选手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "DD", "rating": 78, "desc": "TyLoo 中国步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "tb", "rating": 76, "desc": "TyLoo 中国选手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "DD", "rating": 79, "desc": "TyLoo 中国突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Attacker", "rating": 77, "desc": "TyLoo 中国步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "CaptainMo", "rating": 77, "desc": "TyLoo 中国自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "somebody", "rating": 76, "desc": "TyLoo 中国后期选手", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2016-2019": [{"name": "captainMo", "rating": 79, "desc": "TyLoo 中国指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "advent", "rating": 77, "desc": "Flash Gaming 中国指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Kaze", "rating": 82, "desc": "Flash Gaming 马来西亚狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Mo", "rating": 80, "desc": "TyLoo 中国狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "xccurate", "rating": 81, "desc": "TYLOO 印尼狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "BnTeT", "rating": 85, "desc": "TYLOO 印尼明星，亚洲最强选手之一", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "somebody", "rating": 81, "desc": "TYLOO 中国核心，鬼王爷", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Attacker", "rating": 80, "desc": "TYLOO 中国步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "somebody", "rating": 82, "desc": "TYLOO 中国突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Attacker", "rating": 81, "desc": "TYLOO 中国突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "DD", "rating": 80, "desc": "TYLOO 中国步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "BnTeT", "rating": 84, "desc": "TYLOO 印尼自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Summer", "rating": 79, "desc": "TYLOO 中国自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Freeman", "rating": 78, "desc": "TYLOO 中国选手", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2020-2022": [{"name": "advent", "rating": 78, "desc": "VG 中国指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Summer", "rating": 77, "desc": "TYLOO 中国指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "DANK1NG", "rating": 84, "desc": "TYLOO 中国天才狙击手，明星气质", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Kaze", "rating": 81, "desc": "RA 马来西亚狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "xccurate", "rating": 80, "desc": "印尼狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "DANK1NG", "rating": 85, "desc": "TYLOO 中国明星狙击手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "BnTeT", "rating": 83, "desc": "Gen.G 印尼选手（亚洲效力）", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "somebody", "rating": 80, "desc": "TYLOO 中国老将", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "DANK1NG", "rating": 84, "desc": "TYLOO 中国突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Attacker", "rating": 79, "desc": "TYLOO 中国步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Mercury", "rating": 78, "desc": "中国新星突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Summer", "rating": 79, "desc": "TYLOO 中国自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Freeman", "rating": 78, "desc": "中国自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Kaze", "rating": 80, "desc": "马来西亚自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2023-2025": [{"name": "advent", "rating": 79, "desc": "TYLOO 中国指挥，9爷", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Summer", "rating": 78, "desc": "中国指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "DANK1NG", "rating": 85, "desc": "TYLOO 中国明星狙击手（后期活跃）", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Jee", "rating": 82, "desc": "TYLOO 中国年轻狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Kaze", "rating": 80, "desc": "RA 马来西亚狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "DANK1NG", "rating": 86, "desc": "中国CS明星，最高人气选手之一", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "z4kr", "rating": 84, "desc": "LVG 中国新星步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "JamYoung", "rating": 83, "desc": "TYLOO 中国年轻步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "z4kr", "rating": 84, "desc": "LVG 中国突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Mercury", "rating": 82, "desc": "TYLOO 中国突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Moseyuh", "rating": 80, "desc": "TYLOO 中国步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "JamYoung", "rating": 83, "desc": "TYLOO 中国自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "advent", "rating": 78, "desc": "TYLOO 中国指挥自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Kaze", "rating": 81, "desc": "RA 马来西亚自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}]}, "大洋洲": {"2000s": [], "2010-2015": [{"name": "SPUNJ", "rating": 80, "desc": "Renegades 澳洲传奇指挥，SPUNJ 本人", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "yam", "rating": 76, "desc": "澳洲老将指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Rickeh", "rating": 82, "desc": "澳洲狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "SPUNJ", "rating": 79, "desc": "Renegades 澳洲狙神", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "SPUNJ", "rating": 82, "desc": "Renegades 澳洲传奇", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "jks", "rating": 84, "desc": "Renegades 澳洲新星，未来之星", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "AZR", "rating": 81, "desc": "Renegades 澳洲步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "AZR", "rating": 82, "desc": "Renegades 澳洲突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "USTILO", "rating": 80, "desc": "Renegades 澳洲步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "jks", "rating": 83, "desc": "Renegades 澳洲步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "jks", "rating": 85, "desc": "Renegades 澳洲自由人，未来顶级选手", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Liazz", "rating": 78, "desc": "澳洲新星自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "SPUNJ", "rating": 79, "desc": "Renegades 澳洲自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2016-2019": [{"name": "AZR", "rating": 83, "desc": "Renegades 澳洲指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "SPUNJ", "rating": 79, "desc": "澳洲老将指挥（评论员回归）", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Dexter", "rating": 80, "desc": "MVP PK 澳洲新指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Gratisfaction", "rating": 83, "desc": "Renegades 澳洲狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Sico", "rating": 80, "desc": "澳洲狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Rickeh", "rating": 81, "desc": "澳洲老将狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "jks", "rating": 88, "desc": "Renegades 澳洲最强选手，TOP 20", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "AZR", "rating": 83, "desc": "Renegades 澳洲核心", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Liazz", "rating": 82, "desc": "Renegades 澳洲步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "AZR", "rating": 84, "desc": "Renegades 澳洲突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "USTILO", "rating": 81, "desc": "Renegades 澳洲步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Gratisfaction", "rating": 82, "desc": "Renegades 澳洲突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "jks", "rating": 89, "desc": "Renegades 澳洲完美自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Liazz", "rating": 83, "desc": "Renegades 澳洲自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Dexter", "rating": 81, "desc": "澳洲新自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2020-2022": [{"name": "Dexter", "rating": 83, "desc": "mousesports 澳洲指挥，国际纵队", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "AZR", "rating": 82, "desc": "EXTREMUM 澳洲指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Sico", "rating": 81, "desc": "100T 澳洲狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "aliStair", "rating": 80, "desc": "ORDER 澳洲狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "Gratisfaction", "rating": 82, "desc": "100T 澳洲狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "jks", "rating": 89, "desc": "100T/OG 澳洲最强选手，国际赛场", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Liazz", "rating": 83, "desc": "100T 澳洲步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "jks", "rating": 88, "desc": "G2 2023 Major 冠军（澳洲选手）", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Liazz", "rating": 82, "desc": "100T 澳洲突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "INS", "rating": 80, "desc": "ORDER 澳洲突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Vexite", "rating": 79, "desc": "ORDER 澳洲步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "jks", "rating": 90, "desc": "G2 2023 Major 冠军自由人，澳洲第一人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Dexter", "rating": 82, "desc": "mousesports 澳洲自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Hatz", "rating": 79, "desc": "ORDER 澳洲自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}], "2023-2025": [{"name": "Dexter", "rating": 82, "desc": "M80/新队 澳洲指挥", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "SPUNJ", "rating": 78, "desc": "澳洲评论员，偶尔回归", "primary_position": "指挥", "primary_position_en": "IGL"}, {"name": "Sico", "rating": 80, "desc": "澳洲狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "aliStair", "rating": 79, "desc": "澳洲狙击手", "primary_position": "狙击手", "primary_position_en": "AWP"}, {"name": "jks", "rating": 88, "desc": "FaZe 2024 Major 冠军，澳洲常青树", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Liazz", "rating": 82, "desc": "澳洲步枪手", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Vexite", "rating": 80, "desc": "澳洲新星", "primary_position": "明星选手", "primary_position_en": "Star"}, {"name": "Liazz", "rating": 81, "desc": "澳洲突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "INS", "rating": 80, "desc": "澳洲突破手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "Vexite", "rating": 79, "desc": "澳洲步枪手", "primary_position": "突破手", "primary_position_en": "Entry"}, {"name": "jks", "rating": 89, "desc": "FaZe 2024 Major 冠军自由人，澳洲传奇", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Dexter", "rating": 81, "desc": "澳洲自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}, {"name": "Hatz", "rating": 78, "desc": "澳洲自由人", "primary_position": "绕后手", "primary_position_en": "Lurker"}]}};
+
+const STAGES = ["新挑战者组", "新传奇组", "冠军组（八强）", "半决赛", "总决赛"];
+
+
+let state = {
+    round: 1,
+    team: {},
+    currentOptions: [],
+    selectedPlayer: null,
+    skipsUsed: false,
+    simulating: false,
+    rolling: false
+};
+
+function init() {
+    createParticles();
+    updateUI();
+    initDraftAreaClick();
+}
+
+function createParticles() {
+    const container = document.getElementById('bgParticles');
+    for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.top = Math.random() * 100 + '%';
+        p.style.animationDelay = Math.random() * 8 + 's';
+        p.style.animationDuration = (6 + Math.random() * 6) + 's';
+        container.appendChild(p);
+    }
+}
+
+function updateUI() {
+    document.getElementById('roundNum').textContent = state.round;
+    const filled = Object.keys(state.team).length;
+    document.getElementById('simBtn').disabled = filled < 5;
+    document.getElementById('skipBtn').disabled = state.skipsUsed || state.rolling || state.currentOptions.length === 0;
+}
+
+async function rollDraft() {
+    if (state.rolling || state.round > 5) return;
+    state.rolling = true;
+    document.getElementById('rollBtn').disabled = true;
+    document.getElementById('draftArea').classList.remove('visible');
+    document.getElementById('positionSelector').classList.remove('visible');
+    document.getElementById('simResult').classList.remove('visible');
+    
+    const regionSlot = document.getElementById('regionSlot');
+    const eraSlot = document.getElementById('eraSlot');
+    regionSlot.classList.add('slot-rolling');
+    eraSlot.classList.add('slot-rolling');
+    
+    const startTime = Date.now();
+    while (Date.now() - startTime < 2000) {
+        regionSlot.querySelector('.slot-value').textContent = REGIONS[Math.floor(Math.random() * REGIONS.length)];
+        eraSlot.querySelector('.slot-value').textContent = ERAS[Math.floor(Math.random() * ERAS.length)];
+        await sleep(80);
+    }
+    
+    regionSlot.classList.remove('slot-rolling');
+    eraSlot.classList.remove('slot-rolling');
+    
+    const region = REGIONS[Math.floor(Math.random() * REGIONS.length)];
+    const era = ERAS[Math.floor(Math.random() * ERAS.length)];
+    regionSlot.querySelector('.slot-value').textContent = region;
+    eraSlot.querySelector('.slot-value').textContent = era;
+    
+    // 抽取 3 名选手
+    const pool = PLAYER_POOL[region][era];
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const options = shuffled.slice(0, 6);
+    state.currentOptions = options.map(p => Object.assign({}, p, { region: region, era: era }));
+    state.selectedPlayer = null;
+    state.skipsUsed = false;
+    
+    renderDraftCards();
+    document.getElementById('draftArea').classList.add('visible');
+    updateUI();
+    state.rolling = false;
+    document.getElementById('rollBtn').disabled = false;
+}
+
+function renderDraftCards() {
+    const container = document.getElementById('draftCards');
+    container.innerHTML = '';
+    state.currentOptions.forEach((p, idx) => {
+        const card = document.createElement('div');
+        card.className = 'player-card-draft';
+        card.id = 'draftCard_' + idx;
+        card.onclick = () => selectPlayer(idx);
+        card.innerHTML = '<div class="card-pos-tag">擅长 ' + p.primary_position + ' · ' + p.primary_position_en + '</div>' +
+            '<div class="card-name">' + p.name + '</div>' +
+            '<div class="card-era">' + p.region + ' · ' + p.era + '</div>' +
+            '<div class="card-rating">' + p.rating + '</div>' +
+            '<div class="card-desc">' + p.desc + '</div>' +
+            '<div class="card-hint">点击选择此选手</div>' +
+            '<div class="card-rating-bar"><div class="card-rating-bar-inner" style="width:0%"></div></div>';
+        container.appendChild(card);
+        setTimeout(() => {
+            card.querySelector('.card-rating-bar-inner').style.width = p.rating + '%';
+        }, 100 + idx * 100);
+    });
+}
+
+
+function selectPlayer(idx) {
+    const card = document.getElementById('draftCard_' + idx);
+    // 如果点击已选中的，取消选择
+    if (state.selectedPlayer === state.currentOptions[idx]) {
+        deselectPlayer();
+        return;
+    }
+    // 选择新选手
+    state.selectedPlayer = state.currentOptions[idx];
+    document.querySelectorAll('.player-card-draft').forEach((c, i) => {
+        if (i === idx) {
+            c.classList.add('selected');
+            c.classList.remove('dimmed');
+        } else {
+            c.classList.remove('selected');
+            c.classList.add('dimmed');
+        }
+    });
+    renderPositionSelector();
+    document.getElementById('positionSelector').classList.add('visible');
+}
+
+function deselectPlayer() {
+    state.selectedPlayer = null;
+    document.querySelectorAll('.player-card-draft').forEach(c => {
+        c.classList.remove('selected');
+        c.classList.remove('dimmed');
+    });
+    document.getElementById('positionSelector').classList.remove('visible');
+}
+
+function initDraftAreaClick() {
+    const draftArea = document.getElementById('draftArea');
+    draftArea.addEventListener('click', function(e) {
+        // 点击了卡片区域或位置选择器，不处理
+        if (e.target.closest('.player-card-draft') || e.target.closest('.position-selector')) return;
+        // 点击了 draft-area 内空白区域，取消选择
+        if (state.selectedPlayer) deselectPlayer();
+    });
+}
+
+
+function renderPositionSelector() {
+    POSITIONS.forEach(pos => {
+        const btn = document.getElementById('posBtn_' + pos);
+        if (state.team[pos]) {
+            btn.classList.add('occupied');
+            btn.classList.remove('selected-slot');
+        } else {
+            btn.classList.remove('occupied');
+            if (state.selectedPlayer && state.selectedPlayer.primary_position === pos) {
+                btn.classList.add('selected-slot');
+            } else {
+                btn.classList.remove('selected-slot');
+            }
+        }
+    });
+}
+
+function selectPosition(pos) {
+    if (!state.selectedPlayer || state.team[pos]) return;
+    
+    const player = state.selectedPlayer;
+    const isMatch = player.primary_position === pos;
+    const effectiveRating = isMatch ? player.rating : Math.round(player.rating * 0.85);
+    
+    state.team[pos] = {
+        name: player.name,
+        rating: player.rating,
+        effectiveRating: effectiveRating,
+        desc: player.desc,
+        region: player.region,
+        era: player.era,
+        primary_position: player.primary_position,
+        isMatch: isMatch
+    };
+    
+    // 更新阵容显示
+    const slot = document.getElementById('roster_' + pos);
+    slot.classList.add('filled');
+    slot.innerHTML = '<div class="roster-slot-pos">' + pos + ' · ' + POSITIONS_EN[pos] + '</div>' +
+        '<div class="roster-slot-name">' + player.name + '</div>' +
+        '<div class="roster-slot-rating">' + effectiveRating + (isMatch ? '' : ' (错位-15%)') + '</div>' +
+        '<div class="roster-slot-desc">' + player.desc + '</div>' +
+        '<div class="roster-slot-era">' + player.region + ' · ' + player.era + '</div>';
+    
+    // 清理选秀区域
+    document.getElementById('draftArea').classList.remove('visible');
+    document.getElementById('positionSelector').classList.remove('visible');
+    state.selectedPlayer = null;
+    state.currentOptions = [];
+    
+    if (state.round < 5) {
+        state.round++;
+    }
+    updateUI();
+}
+
+function skipDraft() {
+    if (state.skipsUsed || state.currentOptions.length === 0) return;
+    state.skipsUsed = true;
+    state.selectedPlayer = null;
+    state.currentOptions = [];
+    document.getElementById('draftArea').classList.remove('visible');
+    document.getElementById('positionSelector').classList.remove('visible');
+    updateUI();
+}
+
+async function simulateMajor() {
+    const filled = Object.keys(state.team).length;
+    if (filled < 5) return;
+    
+    const resultDiv = document.getElementById('simResult');
+    resultDiv.classList.remove('visible');
+    await sleep(300);
+    
+    const team = state.team;
+    const avg = Object.values(team).reduce((s, p) => s + p.effectiveRating, 0) / 5;
+    
+    const star = team['明星选手'] || { effectiveRating: 75 };
+    const entry = team['突破手'] || { effectiveRating: 75 };
+    const lurk = team['绕后手'] || { effectiveRating: 75 };
+    const igl = team['指挥'] || { effectiveRating: 75 };
+    const awp = team['狙击手'] || { effectiveRating: 75 };
+    
+    const firepower = star.effectiveRating * 0.4 + entry.effectiveRating * 0.3 + lurk.effectiveRating * 0.3;
+    const tactics = igl.effectiveRating * 0.6 + lurk.effectiveRating * 0.4;
+    const awpScore = awp.effectiveRating;
+    const teamplay = avg;
+    
+    // 位置匹配加成
+    const matchCount = Object.values(team).filter(p => p.isMatch).length;
+    const matchBonus = matchCount * 2;
+    
+    // 时代兼容性：取最老的时代
+    const eraOrder = { '2000s': 0, '2010-2015': 1, '2016-2019': 2, '2020-2022': 3, '2023-2025': 4 };
+    const minEraVal = Math.min(...Object.values(team).map(p => eraOrder[p.era] || 0));
+    let eraPenalty = 0;
+    if (minEraVal === 0) eraPenalty = 12;
+    else if (minEraVal === 1) eraPenalty = 6;
+    else if (minEraVal === 2) eraPenalty = 3;
+    
+    const composite = Math.round(firepower * 0.35 + tactics * 0.25 + awpScore * 0.2 + teamplay * 0.2 + matchBonus);
+    const adjustedScore = Math.max(0, composite - eraPenalty);
+    
+    let reachedStage = 0;
+    let stageResults = [];
+    for (let i = 0; i < STAGES.length; i++) {
+        const threshold = 60 + i * 8;
+        const randomFactor = Math.random() * 15 - 7.5;
+        const roll = adjustedScore + randomFactor;
+        if (roll >= threshold) {
+            reachedStage = i + 1;
+            stageResults.push({ stage: STAGES[i], passed: true });
+        } else {
+            stageResults.push({ stage: STAGES[i], passed: false });
+            break;
+        }
+    }
+    
+    let resultClass, resultTitle, resultDesc;
+    if (reachedStage >= 5) {
+        resultClass = 'champion';
+        resultTitle = '🏆 MAJOR 冠军！';
+        resultDesc = '你的队伍统治了赛场！从挑战者组一路横扫到总决赛，捧起了Major奖杯。';
+    } else if (reachedStage >= 4) {
+        resultClass = 'contender';
+        resultTitle = '🥈 决赛失利';
+        resultDesc = '你们打进了Major总决赛，但在最后关头惜败。';
+    } else if (reachedStage >= 3) {
+        resultClass = 'challenger';
+        resultTitle = '🥉 冠军组（八强）';
+        resultDesc = '你们成功闯入了冠军组，但倒在了更强的对手面前。';
+    } else if (reachedStage >= 2) {
+        resultClass = 'middle';
+        resultTitle = '⚔️ 传奇组';
+        resultDesc = '你们从新挑战者组成功晋级，但在传奇组阶段被淘汰。';
+    } else if (reachedStage >= 1) {
+        resultClass = 'struggle';
+        resultTitle = '❌ 挑战者组淘汰';
+        resultDesc = '你们在新挑战者组挣扎后遗憾出局。';
+    } else {
+        resultClass = 'struggle';
+        resultTitle = '❌ 未能出线';
+        resultDesc = '你们甚至没能进入Major正赛。';
+    }
+    
+    document.getElementById('resultTitle').className = 'result-title ' + resultClass;
+    document.getElementById('resultTitle').textContent = resultTitle;
+    document.getElementById('resultDesc').textContent = resultDesc;
+    
+    const bracket = document.getElementById('majorBracket');
+    bracket.innerHTML = '';
+    stageResults.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'bracket-stage ' + (r.passed ? 'passed' : 'failed');
+        div.textContent = (r.passed ? '✓ ' : '✗ ') + r.stage;
+        bracket.appendChild(div);
+    });
+    
+    // 分析面板
+    const analysis = document.getElementById('teamAnalysis');
+    analysis.innerHTML = '';
+    
+    const items = [
+        { key: 'firepower', label: '🔥 火力输出', score: Math.round(firepower), grad: 'linear-gradient(90deg, #ff4444, #ff6b00)' },
+        { key: 'tactics', label: '🧠 战术指挥', score: Math.round(tactics), grad: 'linear-gradient(90deg, #4a9eff, #7b68ee)' },
+        { key: 'awp', label: '🎯 AWP 能力', score: Math.round(awpScore), grad: 'linear-gradient(90deg, #f4a900, #ff6b00)' },
+        { key: 'teamplay', label: '🤝 团队配合', score: Math.round(teamplay), grad: 'linear-gradient(90deg, #44ff88, #00cc99)' },
+        { key: 'match', label: '✅ 位置匹配', score: matchCount + '/5', grad: 'linear-gradient(90deg, #f4a900, #ff6b00)', bar: matchCount * 20 }
+    ];
+    
+    items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'analysis-card';
+        const barWidth = item.bar !== undefined ? item.bar : Math.min(100, item.score);
+        card.innerHTML = '<h4>' + item.label + '</h4><p>' + item.score + '</p><div class="analysis-bar"><div class="analysis-bar-fill" style="width:' + barWidth + '%; background: ' + item.grad + '"></div></div>';
+        analysis.appendChild(card);
+    });
+    
+    // 额外分析
+    const extra = document.createElement('div');
+    extra.className = 'analysis-card';
+    extra.style.gridColumn = '1 / -1';
+    let analysisText = [];
+    if (matchCount === 5) analysisText.push('✨ 完美匹配 - 所有选手都在擅长位置，团队发挥最大化');
+    else if (matchCount >= 3) analysisText.push('👍 良好匹配 - 大部分选手在合适位置，阵容相对均衡');
+    else analysisText.push('⚠️ 匹配不佳 - 多名选手不在擅长位置，团队配合受影响');
+    if (firepower >= 90) analysisText.push('🔥 超强火力 - 明星选手和突破手可以碾压大多数对手');
+    if (tactics >= 88) analysisText.push('🧠 战术大师 - 指挥的战术素养极高');
+    if (awpScore >= 90) analysisText.push('🎯 狙击统治 - AWP位置是世界级水准');
+    if (eraPenalty > 0) analysisText.push('⚡ 时代惩罚 - 阵容中有旧时代选手，在现代Major赛制下适应性下降');
+    extra.innerHTML = '<h4>📊 阵容分析</h4>' + analysisText.map(t => '<p>' + t + '</p>').join('');
+    analysis.appendChild(extra);
+    
+    resultDiv.classList.add('visible');
+    addHistory(resultTitle, resultClass);
+}
+
+function addHistory(title, cls) {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    const names = Object.entries(state.team).map(([pos, p]) => p.name + '(' + pos + ')').join(' / ');
+    item.innerHTML = '<span>' + names + '</span><span class="h-result ' + cls + '">' + title + '</span>';
+    document.getElementById('historyList').insertBefore(item, document.getElementById('historyList').firstChild);
+}
+
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+window.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
